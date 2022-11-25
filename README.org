@@ -31,9 +31,9 @@ You are giving a gift to
 $their_name
 $their_address
 
-Remember, keep it under $$25 total!
+Remember, keep it under $$1 total!
 
-- Cameron's email robot
+- Santa's email robot
 """)
 
 def read_csv(path_to_csv):

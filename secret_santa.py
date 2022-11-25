@@ -5,6 +5,7 @@ import smtplib
 from string import Template
 
 
+# change this template as necessary
 email_template = Template("""Hi $your_name,
 Thanks for being a Secret Santa!
 
@@ -13,9 +14,9 @@ You are giving a gift to
 $their_name
 $their_address
 
-Remember, keep it under $$25 total!
+Remember, keep it under $$1 total!
 
-- Cameron's email robot
+- Santa's email robot
 """)
 
 def read_csv(path_to_csv):
@@ -30,6 +31,9 @@ def read_csv(path_to_csv):
     return people
 
 def randomize(people):
+    """
+    Return a dict of pairings, where each key and value is a position in the list of people
+    """
     assignments = {}
     recipients = [i for i in range(len(people))]
 
@@ -48,6 +52,9 @@ def randomize(people):
     return assignments
 
 def make_templates(people, assignments):
+    """
+    Build email templates. Returns a list of {to: "email address", body: "email body"}
+    """
     emails_to_send = []
 
     for s, r in assignments.items():
@@ -55,7 +62,7 @@ def make_templates(people, assignments):
         recipient = people[r]
         email = {
             "to": sender["email"],
-            "message": email_template.substitute(
+            "body": email_template.substitute(
                 your_name=sender["name"],
                 their_name=recipient["name"],
                 their_address=recipient["address"]
@@ -66,6 +73,9 @@ def make_templates(people, assignments):
     return emails_to_send
 
 def send_emails(emails_to_send, dry_run):
+    """
+    Actually send emails
+    """
     if dry_run:
         for email in emails_to_send:
             print(email)
