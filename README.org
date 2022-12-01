@@ -25,6 +25,17 @@ SMTP_PASSWORD=
 
 The defaults above work for gmail accounts, for which you would get a password using [[https://support.google.com/accounts/answer/185833?hl=en][App Passwords]].
 
+** CSV
+
+Given how mailing addresses have commas in them, it's easier to separate values with ~|~. As such,
+format the CSV like so:
+
+#+begin_src csv
+name|email|address
+Bert|bert@sesamestreet.edu|123 Sesame St, City, State 12345
+Sherlock|holmes@investigators.org|21 B Baker St, London
+#+end_src
+
 ** Script
 
 #+begin_src python :tangle secret_santa.py
