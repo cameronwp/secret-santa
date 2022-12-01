@@ -9,6 +9,8 @@ Santa. Randomly assign gift givers and receivers.
 python secret_santa.py --participants participants.csv
 #+end_src
 
+Optionally, add the ~--dry-run=true~ flag if you want to do a test run without actually sending emails.
+
 ** Setup
 
 1. Create and activate a venv: ~python -m venv .venv && .venv/bin/activate~
