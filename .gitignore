@@ -10,4 +10,6 @@ htmlcov
 
 .venv
 
+.env
+
 *.csv

@@ -1,22 +1,27 @@
 import argparse
 import csv
+from email.message import EmailMessage
+import os
 import random
 import smtplib
 from string import Template
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # change this template as necessary
 email_template = Template("""Hi $your_name,
 Thanks for being a Secret Santa!
 
-You are giving a gift to
+You are giving a gift to:
 
 $their_name
 $their_address
 
-Remember, keep it under $$1 total!
+Remember, keep it under $$25 total!
 
-- Santa's email robot
+- Nerding Santa's fascinating email robot
 """)
 
 def read_csv(path_to_csv):
@@ -47,6 +52,7 @@ def randomize(people):
             if not is_same_person and not reciprocal_assignment:
                 found = True
                 assignments[i] = recipient
+                print(f"Giving a gift to {recipient}!")
                 recipients.remove(recipient)
 
     return assignments
@@ -76,9 +82,31 @@ def send_emails(emails_to_send, dry_run):
     """
     Actually send emails
     """
+
     if dry_run:
         for email in emails_to_send:
             print(email)
+        return
+
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_address = os.getenv("SMTP_ADDRESS")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    s = smtplib.SMTP(smtp_host, smtp_port)
+    s.starttls()
+    s.login(smtp_address, smtp_password)
+
+    for email in emails_to_send:
+        msg = EmailMessage()
+        msg.set_content(email["body"])
+        msg["Subject"] = "Nerding Secret Santa!"
+        msg["From"] = smtp_address
+        msg["To"] = email["to"]
+
+        s.send_message(msg)
+
+    s.quit()
 
 def main(path_to_csv, dry_run):
     people = read_csv(path_to_csv)
@@ -92,7 +120,7 @@ if __name__ == "__main__":
                         default=None,
                         help='Path to a CSV file of participants')
     parser.add_argument('--dry-run',
-                        default=True,
+                        default=False,
                         help='Do not actually send emails')
     args = parser.parse_args()
     main(args.participants, args.dry_run)

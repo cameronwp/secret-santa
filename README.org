@@ -9,31 +9,49 @@ Santa. Randomly assign gift givers and receivers.
 python secret_santa.py --participants participants.csv
 #+end_src
 
-#+RESULTS:
-| [{'name': 'Cameron' | 'email': 'cameron.w.pittman@gmail.com' | 'address': '3 William J Hts | Framingham | MA 01702'} | {'name': 'Mo' | 'email': 'mocanellas@gmail.com' | 'address': '3 William J Hts | Framingham | MA 01702'}] |
+** Setup
+
+1. Create and activate a venv: ~python -m venv .venv && .venv/bin/activate~
+2. Install dependencies: ~pip install -r requirements.txt~
+
+You also need to create a ~.env~ file with the following keys:
+
+#+begin_src text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_ADDRESS=person.person@gmail.com
+SMTP_PASSWORD=
+#+end_src
+
+The defaults above work for gmail accounts, for which you would get a password using [[https://support.google.com/accounts/answer/185833?hl=en][App Passwords]].
 
 ** Script
 
 #+begin_src python :tangle secret_santa.py
 import argparse
 import csv
+from email.message import EmailMessage
+import os
 import random
 import smtplib
 from string import Template
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # change this template as necessary
 email_template = Template("""Hi $your_name,
 Thanks for being a Secret Santa!
 
-You are giving a gift to
+You are giving a gift to:
 
 $their_name
 $their_address
 
-Remember, keep it under $$1 total!
+Remember, keep it under $$25 total!
 
-- Santa's email robot
+- Nerding Santa's fascinating email robot
 """)
 
 def read_csv(path_to_csv):
@@ -64,6 +82,7 @@ def randomize(people):
             if not is_same_person and not reciprocal_assignment:
                 found = True
                 assignments[i] = recipient
+                print(f"Giving a gift to {recipient}!")
                 recipients.remove(recipient)
 
     return assignments
@@ -93,9 +112,31 @@ def send_emails(emails_to_send, dry_run):
     """
     Actually send emails
     """
+
     if dry_run:
         for email in emails_to_send:
             print(email)
+        return
+
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_address = os.getenv("SMTP_ADDRESS")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    s = smtplib.SMTP(smtp_host, smtp_port)
+    s.starttls()
+    s.login(smtp_address, smtp_password)
+
+    for email in emails_to_send:
+        msg = EmailMessage()
+        msg.set_content(email["body"])
+        msg["Subject"] = "Nerding Secret Santa!"
+        msg["From"] = smtp_address
+        msg["To"] = email["to"]
+
+        s.send_message(msg)
+
+    s.quit()
 
 def main(path_to_csv, dry_run):
     people = read_csv(path_to_csv)
@@ -109,13 +150,8 @@ if __name__ == "__main__":
                         default=None,
                         help='Path to a CSV file of participants')
     parser.add_argument('--dry-run',
-                        default=True,
+                        default=False,
                         help='Do not actually send emails')
     args = parser.parse_args()
     main(args.participants, args.dry_run)
 #+end_src
-
-** Installation
-1. Create a virtual env: ~python -m venv .venv~
-2. Activate the virtual env
-3. Install dependencies: ~pip install -r requirements.txt~
